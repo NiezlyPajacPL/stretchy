@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.room.Room
 import com.example.stretchy.app.di.scope.ApplicationScope
 import com.example.stretchy.database.AppDatabase
+import com.example.stretchy.database.AppDatabase.Companion.MIGRATION_1_3
 import com.example.stretchy.repository.Repository
 import com.example.stretchy.repository.RepositoryImpl
 import dagger.Module
@@ -22,5 +23,5 @@ class AppModule {
     fun provideDataBase(application: Application): AppDatabase = Room.databaseBuilder(
         application.applicationContext,
         AppDatabase::class.java, AppDatabase.NAME
-    ).allowMainThreadQueries().build()
+    ).addMigrations(MIGRATION_1_3).build()
 }

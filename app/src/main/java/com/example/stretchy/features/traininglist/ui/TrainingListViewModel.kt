@@ -2,6 +2,7 @@ package com.example.stretchy.features.traininglist.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.stretchy.database.data.ActivityType
 import com.example.stretchy.database.data.TrainingType
 import com.example.stretchy.features.datatransport.DataExporterImpl
 import com.example.stretchy.features.datatransport.DataImporterImpl
@@ -10,6 +11,7 @@ import com.example.stretchy.features.traininglist.ui.data.TrainingListUiState
 import com.example.stretchy.features.traininglist.ui.data.getExercisesWithBreak
 import com.example.stretchy.repository.Repository
 import com.example.stretchy.repository.TrainingWithActivity
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -28,7 +30,7 @@ class TrainingListViewModel(
 
     private fun fetchTrainingList() {
         _uiState.value = TrainingListUiState.Loading
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val trainingWithActivityList = repository.getTrainingsWithActivities()
             if (trainingWithActivityList.isEmpty()) {
                 _uiState.value = TrainingListUiState.Empty
@@ -40,27 +42,27 @@ class TrainingListViewModel(
     }
 
     suspend fun import() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             dataImporterImpl.importData()
         }
         fetchTrainingList()
     }
 
     fun export() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             dataExporterImpl.exportData()
         }
     }
 
     private fun TrainingWithActivity.toTraining(): Training {
         var duration = 0
-        getExercisesWithBreak(activities).forEach {activity ->
+        getExercisesWithBreak(activities).forEach { activity ->
             duration += activity.duration
         }
         return Training(
             this.id.toString(),
             this.name,
-            this.activities.size,
+            this.activities.filter { it.activityType != ActivityType.BREAK }.size,
             duration,
             this.trainingType.toTrainingType()
         )
@@ -74,12 +76,12 @@ class TrainingListViewModel(
     }
 
     fun deleteTraining(training: Training) {
-        viewModelScope.launch { repository.deleteTrainingById(training.id.toLong()) }
+        viewModelScope.launch(Dispatchers.IO) { repository.deleteTrainingById(training.id.toLong()) }
         fetchTrainingList()
     }
 
     fun copyTraining(training: Training) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             with(training) {
                 repository.getTrainingWithActivitiesById(id.toLong()).activities.let {
                     repository.addTrainingWithActivities(
@@ -95,6 +97,7 @@ class TrainingListViewModel(
         }
         fetchTrainingList()
     }
+
     companion object {
         const val COPY = " copy"
     }

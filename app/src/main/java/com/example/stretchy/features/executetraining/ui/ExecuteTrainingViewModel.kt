@@ -14,6 +14,7 @@ import com.example.stretchy.features.executetraining.ui.data.event.TrainingCompl
 import com.example.stretchy.features.traininglist.ui.data.getExercisesWithBreak
 import com.example.stretchy.repository.Activity
 import com.example.stretchy.repository.Repository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.takeWhile
@@ -51,7 +52,7 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
             saveStartingTimeStamp()
         }
         _uiState.value = _uiState.value.copy(isLoading = true)
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val trainingWithActivities = repository.getTrainingWithActivitiesById(trainingId)
             getExercisesWithBreak(trainingWithActivities.activities).let { activitiesWithBreaks ->
                 activitiesWithBreaks.forEachIndexed { index, activity ->
