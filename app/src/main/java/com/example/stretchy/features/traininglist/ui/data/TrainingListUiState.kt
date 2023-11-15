@@ -14,7 +14,7 @@ data class Training(
     val type: Type
 ) {
     enum class Type {
-        STRETCHING,
+        STRETCH,
         BODY_WEIGHT
     }
 }

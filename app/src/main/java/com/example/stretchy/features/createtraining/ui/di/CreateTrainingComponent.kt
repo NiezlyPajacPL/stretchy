@@ -1,6 +1,7 @@
 package com.example.stretchy.features.createtraining.ui.di
 
 import com.example.stretchy.activity.di.ActivityComponent
+import com.example.stretchy.database.data.TrainingType
 import com.example.stretchy.features.createtraining.ui.CreateOrEditTrainingViewModel
 import dagger.BindsInstance
 import dagger.Component
@@ -16,7 +17,8 @@ interface CreateTrainingComponent {
     interface Factory {
         fun create(
             activityComponent: ActivityComponent,
-            @BindsInstance trainingId: Long
+            @BindsInstance trainingId: Long,
+            @BindsInstance trainingType: TrainingType
         ): CreateTrainingComponent
     }
 
@@ -25,9 +27,11 @@ interface CreateTrainingComponent {
     companion object {
         fun create(
             activityComponent: ActivityComponent,
-            trainingId: Long
+            trainingId: Long,
+            trainingType: TrainingType
         ): CreateTrainingComponent {
-            return DaggerCreateTrainingComponent.factory().create(activityComponent, trainingId)
+            return DaggerCreateTrainingComponent.factory()
+                .create(activityComponent, trainingId, trainingType)
         }
     }
 }

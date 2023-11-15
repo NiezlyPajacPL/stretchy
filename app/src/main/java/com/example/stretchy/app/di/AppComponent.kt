@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.Application
 import com.example.stretchy.app.StretchyApp
 import com.example.stretchy.app.di.scope.ApplicationScope
+import com.example.stretchy.features.createtraining.ui.data.AutomaticBreakPreferences
 import com.example.stretchy.repository.Repository
 import dagger.BindsInstance
 import dagger.Component
@@ -21,6 +22,8 @@ interface AppComponent {
     fun inject(application: StretchyApp)
 
     fun repository(): Repository
+
+    fun automaticBreakPreferences() : AutomaticBreakPreferences
 
     companion object {
         fun create(application: StretchyApp): AppComponent =

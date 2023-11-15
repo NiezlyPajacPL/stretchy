@@ -14,18 +14,20 @@ import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.stretchy.R
 import com.example.stretchy.Screen
 import com.example.stretchy.theme.BananaMania
 
 @Composable
 fun TrainingSummaryComposable(
     numberOfExercises: Int,
-    currentTrainingTime: String,
+    timeSpent: String,
     navController: NavController
 ) {
     Box(
@@ -38,7 +40,7 @@ fun TrainingSummaryComposable(
             modifier = Modifier.padding(top = 48.dp)
         ) {
             Text(
-                text = "You finished your training!",
+                stringResource(id = R.string.you_finished_training),
                 fontSize = 28.sp,
                 textAlign = TextAlign.Start,
                 color = Color.Black,
@@ -46,7 +48,7 @@ fun TrainingSummaryComposable(
             )
             Spacer(modifier = Modifier.height(200.dp))
             Text(
-                text = "Total Exercises: $numberOfExercises",
+                text = stringResource(id = R.string.total_exercises, numberOfExercises),
                 fontSize = 28.sp,
                 textAlign = TextAlign.Start,
                 color = Color.Black,
@@ -54,7 +56,7 @@ fun TrainingSummaryComposable(
             )
             Spacer(modifier = Modifier.height(36.dp))
             Text(
-                text = "Time spent: $currentTrainingTime",
+                text = stringResource(id = R.string.time_spent, timeSpent),
                 fontSize = 28.sp,
                 textAlign = TextAlign.Start,
                 color = Color.Black,
@@ -66,7 +68,7 @@ fun TrainingSummaryComposable(
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
-                    ) { navController.navigate(Screen.TrainingListScreen.route) }
+                    ) { navController.navigate(Screen.StretchingListScreen.route) }
                     .height(80.dp)
                     .fillMaxWidth()
                     .padding(12.dp),
@@ -77,7 +79,7 @@ fun TrainingSummaryComposable(
                     Text(
                         modifier = Modifier
                             .fillMaxWidth(),
-                        text = "Finish",
+                        text = stringResource(id = R.string.finish),
                         color = Color.White,
                         textAlign = TextAlign.Center
                     )

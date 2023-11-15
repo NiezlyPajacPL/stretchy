@@ -16,8 +16,9 @@ ext {
     espresso = "3.4.0"
     andoidJunitVersion = "1.1.3"
 
-    composeVersion = '1.2.1'
+    composeVersion = '1.4.3'
     composeNavVersion = "2.5.1"
+    composeFoundationVersion = "1.5.3"
     activityComposeVersion = '1.5.0'
 
     androidTest = [
@@ -32,7 +33,8 @@ ext {
             "androidx.compose.ui:ui-tooling-preview:$composeVersion",
             "androidx.activity:activity-compose:$activityComposeVersion",
             "androidx.navigation:navigation-runtime-ktx:$composeNavVersion",
-            "androidx.navigation:navigation-compose:$composeNavVersion"
+            "androidx.navigation:navigation-compose:$composeNavVersion",
+            "androidx.compose.foundation:foundation:$composeVersion",
     ]
 
     composeDebugImplementation = [

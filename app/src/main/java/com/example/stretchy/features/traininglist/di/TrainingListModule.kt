@@ -1,5 +1,6 @@
 package com.example.stretchy.features.traininglist.di
 
+import com.example.stretchy.database.data.TrainingType
 import com.example.stretchy.features.datatransport.DataExporterImpl
 import com.example.stretchy.features.datatransport.DataImporterImpl
 import com.example.stretchy.features.traininglist.ui.TrainingListViewModel
@@ -13,7 +14,8 @@ class TrainingListModule {
     fun provideTrainingListViewModel(
         repository: Repository,
         dataImporterImpl: DataImporterImpl,
-        dataExporterImpl: DataExporterImpl
+        dataExporterImpl: DataExporterImpl,
+        trainingType: TrainingType
     ) =
-        TrainingListViewModel(repository, dataImporterImpl, dataExporterImpl)
+        TrainingListViewModel(repository, dataImporterImpl, dataExporterImpl,trainingType)
 }

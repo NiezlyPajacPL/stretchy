@@ -10,7 +10,7 @@ fun getExercisesWithBreak(training: List<Activity>): List<Activity> {
         exercisesWithBreaks.add(exercise)
         if (i != training.lastIndex) {
             val nextExercise = training[i + 1]
-            exercisesWithBreaks.add(Activity(nextExercise.name, 5, ActivityType.BREAK).apply {
+            exercisesWithBreaks.add(Activity(nextExercise.name,i, 5, ActivityType.BREAK).apply {
                 activityId = nextExercise.activityId
             })
         }

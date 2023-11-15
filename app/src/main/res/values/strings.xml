@@ -1,9 +1,10 @@
 <resources>
     <string name="app_name">Stretchy</string>
+    <string name="toolbar_title">Stretches List</string>
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
     <string name="title_activity_main">MainActivity</string>
-    <string name="total_time">Total time</string>
+    <string name="estimated_time">Estimated time</string>
     <string name="exercises">Exercises</string>
     <string name="exercises_not_added">You did not add any exercises yet!</string>
     <string name="do_it_by_add_button">Do it by clicking + button</string>
@@ -19,8 +20,15 @@
     <string name="training_name">Training name</string>
     <string name="name">Name:</string>
     <string name="create_training">Create training!</string>
-    <string name="import_trainings">Import</string>
+    <string name="permissions_needed_desc">Importing and exporting data requires storage permissions.\n\n Press accept to enable that feature.</string>
+    <string name="decline">Decline</string>
+    <string name="accept">Accept</string>
+    <string name="permissions_needed">Permissions are needed</string>
+    <string name="import_and_override">Import and override</string>
+    <string name="import_and_append">Import and append</string>
+    <string name="trainings_imported">Trainings has been imported.</string>
     <string name="export_trainings">Export</string>
+    <string name="trainings_exported">Trainings has been exported.</string>
     <string name="save_changes">Save changes!</string>
     <string name="duration">Duration: </string>
     <string name="exercise_edited">Exercise edited</string>
@@ -32,9 +40,15 @@
     <string name="close_editing">Close Editing</string>
     <string name="do_you_want_to_quit">Do you really want to give up training? Press the back button again to quit.</string>
     <string name="quit">QUIT</string>
+    <string name="wrong_format">Wrong file format.</string>
     <string name="stretching">Stretching</string>
     <string name="meta_training">Meta training</string>
     <string name="training">Training</string>
+    <string name="exercise">Exercise</string>
+    <string name="you_finished_training">You finished your training!</string>
+    <string name="total_exercises">Total Exercises: %1$d</string>
+    <string name="time_spent">Time spent: %1$s</string>
+    <string name="finish">Finish</string>
 
     //content description
     <string name="desc_delete_icon">Delete icon</string>
@@ -42,4 +56,7 @@
     <string name="desc_menu_icon">Menu icon</string>
     <string name="desc_edit_icon">Edit icon</string>
     <string name="desc_copy_icon">Copy icon</string>
+    <string name="append_auto_break">Append automatic break:</string>
+    <string name="secs">(secs)</string>
+
 </resources>
