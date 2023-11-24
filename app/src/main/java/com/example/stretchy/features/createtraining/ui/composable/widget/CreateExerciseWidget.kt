@@ -270,7 +270,7 @@ fun toDisplayableLength(exerciseDuration: Int): String {
     return if (exerciseDuration >= 60) {
         val mins = exerciseDuration / 60
         val rest = exerciseDuration.mod(60)
-        "$mins min $rest sec"
+        "${mins}m ${rest}s"
     } else {
         "$exerciseDuration sec"
     }

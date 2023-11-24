@@ -1,5 +1,6 @@
 package com.example.stretchy.features.executetraining.ui.composable.pager
 
+import android.util.Log
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.pager.HorizontalPager
@@ -43,7 +44,7 @@ fun ActivityPager(
 
     HorizontalPager(
         state = pagerState,
-        pageCount = uiState.displayableActivityItemListWithBreakMerged!!.size
+        pageCount = uiState.displayableActivityItemListWithBreakMerged!!.size,
     ) { page ->
         val item = uiState.displayableActivityItemListWithBreakMerged!![page]
         if (page == uiState.currentDisplayPage) {
@@ -53,8 +54,12 @@ fun ActivityPager(
                 viewModel = viewModel,
                 getMaxSecondsFromList = getMaxSecondsFromList,
                 uiState = uiState,
-                onTimedActivity = onTimedActivity,
-                onTimelessExercise = onTimelessExercise,
+                onTimedActivity = {
+                    onTimedActivity()
+                },
+                onTimelessExercise = {
+                    onTimelessExercise()
+                },
                 onSecondsTakenFromList = { getMaxSecondsFromList = false }
             )
         } else {
@@ -103,7 +108,9 @@ fun FocusedPage(
                 exerciseName = exercise.name,
                 nextExerciseName = exercise.nextExercise,
                 viewModel = viewModel
-            )
+            ){
+                viewModel.changePage(page-1, true)
+            }
             onTimelessExercise()
         }
         ActivityType.BREAK -> {
@@ -152,7 +159,9 @@ fun PagesNotFocused(
                     exerciseName = name,
                     nextExerciseName = nextExercise,
                     viewModel = viewModel
-                )
+                ){
+                    viewModel.changePage(page-1, true)
+                }
             }
         ActivityType.BREAK -> {
             BreakComposable(

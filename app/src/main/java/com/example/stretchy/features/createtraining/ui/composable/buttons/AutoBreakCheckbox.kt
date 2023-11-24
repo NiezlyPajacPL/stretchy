@@ -1,9 +1,6 @@
 package com.example.stretchy.features.createtraining.ui.composable.buttons
 
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Checkbox
@@ -25,7 +22,12 @@ import com.example.stretchy.features.createtraining.ui.CreateOrEditTrainingViewM
 fun AutoBreakCheckbox(viewModel: CreateOrEditTrainingViewModel) {
     var isAutoBreakChecked by remember { mutableStateOf(true) }
     var autoBreakDuration by remember { mutableStateOf("${viewModel.getAutoBreakDuration()}") }
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .padding(start = 16.dp, end = 16.dp), verticalAlignment = Alignment.CenterVertically
+    ) {
         Checkbox(
             checked = isAutoBreakChecked,
             onCheckedChange = {

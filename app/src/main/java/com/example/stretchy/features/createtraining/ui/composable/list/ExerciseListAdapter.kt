@@ -1,5 +1,6 @@
 package com.example.stretchy.features.createtraining.ui.composable.list
 
+import android.util.Log
 import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
 import androidx.recyclerview.widget.RecyclerView
@@ -34,6 +35,8 @@ class ExerciseListAdapter(
                 item,
                 position = position,
                 onExpand = {
+                    Log.e("asd",position.toString())
+                    Log.e("asditem",exercisesWithBreaks[position].toString())
                     getCurrentExpandedItemPosition()?.let {
                         hideExpandedItem(it)
                     }
@@ -55,6 +58,8 @@ class ExerciseListAdapter(
     fun moveItem(from: Int, to: Int) {
         Collections.swap(exercisesWithBreaks, from, to)
         notifyItemMoved(from, to)
+        notifyItemChanged(from)
+        notifyItemChanged(to)
     }
 
     fun submitList(newList: List<ExercisesWithBreaks>) {

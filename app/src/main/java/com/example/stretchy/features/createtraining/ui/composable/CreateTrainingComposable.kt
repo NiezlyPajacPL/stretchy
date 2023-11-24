@@ -82,31 +82,33 @@ fun CreateTrainingComposable(
                         AutoBreakCheckbox(viewModel = viewModel)
                         isTrainingBeingEdited = state.editingTraining
                         isAutoBreakButtonClicked = state.isAutomaticBreakButtonClicked
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(30.dp))
                         if (!isListInitialized) {
                             exerciseList = state.exercisesWithBreaks
                             isListInitialized = true
                         }
-                        ActivitiesList(
-                            activitiesWithBreaks = exerciseList,
-                            onListChange = {
-                                exerciseList = it
-                                viewModel.setExercises(exerciseList)
-                                if (exerciseList != state.exercisesWithBreaks) {
-                                    isTrainingChanged = true
-                                }
-                            },
-                            addExerciseButtonHandler = object : AddExerciseButtonHandler{
-                                override fun hideButton() {
-                                    isFloatingButtonVisible = false
-                                }
+                        //Box(Modifier.padding(top = 64.dp, bottom = 64.dp).height(300.dp).background(Color.Gray)){
+                            ActivitiesList(
+                                activitiesWithBreaks = exerciseList,
+                                onListChange = {
+                                    exerciseList = it
+                                    viewModel.setExercises(exerciseList)
+                                    if (exerciseList != state.exercisesWithBreaks) {
+                                        isTrainingChanged = true
+                                    }
+                                },
+                                addExerciseButtonHandler = object : AddExerciseButtonHandler{
+                                    override fun hideButton() {
+                                        isFloatingButtonVisible = false
+                                    }
 
-                                override fun showButton() {
-                                    isFloatingButtonVisible = true
-                                }
+                                    override fun showButton() {
+                                        isFloatingButtonVisible = true
+                                    }
 
-                            }
-                        )
+                                }
+                            )
+                 //       }
                     }
                     is CreateTrainingUiState.Error -> {
                         HandleError(state = state, context = context)

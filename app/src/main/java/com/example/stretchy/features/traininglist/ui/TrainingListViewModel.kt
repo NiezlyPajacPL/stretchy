@@ -1,5 +1,6 @@
 package com.example.stretchy.features.traininglist.ui
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stretchy.database.data.ActivityType
@@ -11,6 +12,7 @@ import com.example.stretchy.features.traininglist.ui.data.TrainingListUiState
 import com.example.stretchy.repository.Activity
 import com.example.stretchy.repository.Repository
 import com.example.stretchy.repository.TrainingWithActivity
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -25,7 +27,7 @@ class TrainingListViewModel(
     val uiState: StateFlow<TrainingListUiState> = _uiState
 
     init {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             fetchTrainingList()
         }
     }
@@ -73,14 +75,15 @@ class TrainingListViewModel(
             this.id.toString(),
             this.name,
             this.activities.getExercisesCount(),
-            calculateTrainingDuration(activities),
+            calculateEstimatedTrainingDuration(activities),
             this.trainingType.toTrainingType()
         )
     }
 
-    private fun calculateTrainingDuration(activities: List<Activity>): Int {
+    private fun calculateEstimatedTrainingDuration(activities: List<Activity>): Int {
         var duration = 0
         activities.forEach { activity ->
+            Log.e("aasd",activity.toString())
             duration += if (activity.duration == 0 || activity.activityType == ActivityType.TIMELESS_EXERCISE) {
                 TIMELESS_EXERCISE_ESTIMATED_DURATION_SECS
             } else {
@@ -121,7 +124,7 @@ class TrainingListViewModel(
                     repository.addTrainingWithActivities(
                         TrainingWithActivity(
                             name + COPY,
-                            TrainingType.STRETCH,
+                            trainingType,
                             true,
                             it
                         )

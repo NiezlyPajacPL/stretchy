@@ -1,6 +1,7 @@
 package com.example.stretchy.features.createtraining.ui.composable.list
 
 import android.view.ViewGroup
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier

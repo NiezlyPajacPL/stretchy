@@ -4,7 +4,7 @@ import com.example.stretchy.features.createtraining.ui.data.Exercise
 
 
 data class ExercisesWithBreaks(
-    val listId: Int,
+    var listId: Int,
     val exercise: Exercise,
     var nextBreakDuration: Int?,
     var isExpanded: Boolean
