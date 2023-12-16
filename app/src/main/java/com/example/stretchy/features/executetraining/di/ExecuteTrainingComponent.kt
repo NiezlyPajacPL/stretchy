@@ -1,7 +1,6 @@
 package com.example.stretchy.features.executetraining.di
 
 import com.example.stretchy.activity.di.ActivityComponent
-import com.example.stretchy.features.executetraining.sound.Player
 import com.example.stretchy.features.executetraining.ui.ExecuteTrainingViewModel
 import dagger.BindsInstance
 import dagger.Component
@@ -22,7 +21,6 @@ interface ExecuteTrainingComponent {
     }
 
     fun viewModelProvider(): Provider<ExecuteTrainingViewModel>
-    fun player(): Player
 
     companion object {
         fun create(

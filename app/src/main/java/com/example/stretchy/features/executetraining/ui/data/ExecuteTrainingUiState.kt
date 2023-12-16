@@ -1,10 +1,7 @@
 package com.example.stretchy.features.executetraining.ui.data
 
 import com.example.stretchy.database.data.ActivityType
-import com.example.stretchy.features.executetraining.ui.data.event.ActivityFinishesEvent
-import com.example.stretchy.features.executetraining.ui.data.event.BreakEndsEvent
-import com.example.stretchy.features.executetraining.ui.data.event.ReadExerciseNameEvent
-import com.example.stretchy.features.executetraining.ui.data.event.TrainingCompletedEvent
+import com.example.stretchy.features.executetraining.sound.data.SoundEvent
 
 data class ExecuteTrainingUiState(
     var isLoading: Boolean,
@@ -16,10 +13,7 @@ data class ExecuteTrainingUiState(
     var activityTypes: List<ActivityType>?,
     var currentDisplayPage: Int,
     //events
-    val readExerciseNameEvent: ReadExerciseNameEvent?,
-    val trainingCompletedEvent: TrainingCompletedEvent?,
-    val activityFinishesEvent: ActivityFinishesEvent?,
-    val breakEndsEvent: BreakEndsEvent?
+    val soundEvent: SoundEvent?
 )
 
 class TrainingCompleted(val currentTrainingTime: String, val numberOfExercises: Int)

@@ -6,18 +6,16 @@ import androidx.lifecycle.viewModelScope
 import com.example.stretchy.common.convertSecondsToMinutes
 import com.example.stretchy.database.data.ActivityType
 import com.example.stretchy.features.executetraining.Timer
+import com.example.stretchy.features.executetraining.sound.data.SoundEvent
+import com.example.stretchy.features.executetraining.sound.managers.SoundEventNotifier
+import com.example.stretchy.features.executetraining.sound.managers.SoundEventNotifierImpl
+import com.example.stretchy.features.executetraining.sound.data.TrainingEvent
 import com.example.stretchy.features.executetraining.ui.data.*
-import com.example.stretchy.features.executetraining.ui.data.event.ActivityFinishesEvent
-import com.example.stretchy.features.executetraining.ui.data.event.BreakEndsEvent
-import com.example.stretchy.features.executetraining.ui.data.event.ReadExerciseNameEvent
-import com.example.stretchy.features.executetraining.ui.data.event.TrainingCompletedEvent
 import com.example.stretchy.repository.Activity
 import com.example.stretchy.repository.Repository
 import com.example.stretchy.repository.TrainingWithActivity
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.takeWhile
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.lang.Thread.sleep
@@ -31,14 +29,14 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
     private var isPaused = true
 
     private var startingTimestampSaved = false
-    private var currentExerciseLoaded: Long? = null
-    private var activityFinishedEventPosted: Long? = null
-    private var lastActivityBreakSoundPosted: Long? = null
     private var startingTimestamp = 0L
     private var index = 0
+    private val soundBeforeBreakEndsMs = 100F
+    private val `3_SECONDS` = 3000F
 
     private var skippedByUser = false
     private lateinit var trainingWithActivities: TrainingWithActivity
+    private lateinit var soundEventNotifier: SoundEventNotifier
 
 
     init {
@@ -49,6 +47,7 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
         viewModelScope.launch {
             trainingWithActivities = repository.getTrainingWithActivitiesById(trainingId)
             initializeDisplayableList()
+            initializeSoundManager()
 
             trainingWithActivities.activities.let { activitiesWithBreaks ->
                 while (!trainingFinished()) {
@@ -70,7 +69,11 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
             }
             if (isSkippedByUser) {
                 handleUserSkip(currentPage, destinationPage)
+                viewModelScope.launch {
+                    notifySoundHandlerActivityUpdated()
+                }
             }
+
             _uiState.value = _uiState.value.copy(
                 trainingProgressPercent = getPercentageForPage(destinationPage),
                 currentDisplayPage = destinationPage
@@ -96,71 +99,39 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
             .collect { currentSeconds ->
                 _uiState.value = _uiState.value.copy(currentSeconds = currentSeconds)
                 when (currentActivity.activityType) {
-                    ActivityType.STRETCH, ActivityType.EXERCISE -> {
-                        handleTimedActivity(
-                            isFirstExercise = index == 0,
-                            currentActivity = currentActivity,
-                            currentSeconds = currentSeconds
+                    ActivityType.STRETCH, ActivityType.EXERCISE, ActivityType.TIMELESS_EXERCISE -> {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            error = null
                         )
                     }
-                    ActivityType.TIMELESS_EXERCISE -> {
-                        handleTimedActivity(
-                            isFirstExercise = index == 0,
-                            currentActivity = currentActivity,
-                            currentSeconds = 0F
-                        )
-                    }
+
                     ActivityType.BREAK -> {
-                        handleBreak(
-                            currentActivity = currentActivity,
-                            currentSeconds = currentSeconds,
-                        )
+                        handleBreak()
                     }
+                }
+                if (activityEndsIn3sec(currentSeconds)) {
+                    soundEventNotifier.notifyEvent(TrainingEvent.ActivityEndsIn3Sec)
+                }
+                if(activityEnds(currentSeconds)){
+                    soundEventNotifier.notifyEvent(TrainingEvent.BreakEnds)
                 }
             }
     }
 
-    private fun handleTimedActivity(
-        isFirstExercise: Boolean,
-        currentActivity: Activity,
-        currentSeconds: Float
-    ) {
-        _uiState.value = _uiState.value.copy(
-            isLoading = false,
-            error = null,
-            readExerciseNameEvent = if (isFirstExercise) {
-                postReadExerciseNameEvent(
-                    currentActivity.activityId,
-                    currentActivity.name
-                )
-            } else {
-                _uiState.value.readExerciseNameEvent
-            },
-            activityFinishesEvent = postActivityFinishesEvent(
-                currentActivity.activityId,
-                currentSeconds
-            )
-        )
+    private suspend fun collectSoundsFlow() {
+        soundEventNotifier.soundEventFlow.collect {
+            _uiState.value = _uiState.value.copy(soundEvent = it)
+        }
     }
 
-    private fun handleBreak(
-        currentActivity: Activity,
-        currentSeconds: Float,
-    ) {
+    private fun handleBreak() {
         val list = _uiState.value.activityTypes as MutableList<ActivityType>
         list[_uiState.value.currentDisplayPage] = ActivityType.BREAK
         _uiState.value = _uiState.value.copy(
             isLoading = false,
             error = null,
             activityTypes = list,
-            readExerciseNameEvent = postReadExerciseNameEvent(
-                currentActivity.activityId,
-                currentActivity.name
-            ),
-            breakEndsEvent = postBreakFinishesEvent(
-                currentActivity.activityId,
-                currentSeconds
-            ),
         )
     }
 
@@ -173,16 +144,19 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
             currentPage++
             changePage(destinationPage = currentPage, false)
         }
+        notifySoundHandlerActivityUpdated()
     }
 
     private fun handleUserSkip(currentPage: Int, destinationPage: Int) {
         skippedByUser = true
+        _uiState.value = _uiState.value.copy(soundEvent = SoundEvent.SkipSounds())
         val nextIndex = getNextActivityIndexByDestinationPage(currentPage, destinationPage)
         if (nextIndex != null) {
             index = nextIndex
         }
         val currentActivity = trainingWithActivities.activities[index]
         handleSwipeWhenTimerIsPausedEdgeCase(currentActivity)
+        notifySoundHandlerActivityUpdated()
     }
 
     private fun trainingFinished(): Boolean {
@@ -197,10 +171,24 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
         currentPage: Int,
         destinationPage: Int
     ): Int? {
+
         val activities = trainingWithActivities.activities
-        var newIndex: Int? = index
+        var newIndex: Int = index
+        fun handleSwipingBackFromBreakEdgeCase() {
+            //If user swipes back from break,
+            // the page changes so it won't be previous exercise,
+            // but the exercise on the previous page
+            newIndex = newIndex.minus(
+                if (activities.getOrNull(index - 2)?.activityType != ActivityType.BREAK) {
+                    2
+                } else {
+                    3
+                }
+            )
+        }
+
         if (destinationPage > currentPage) {
-            newIndex = newIndex?.plus(
+            newIndex = newIndex.plus(
                 if (activities.getOrNull(index + 1)?.activityType != ActivityType.BREAK) {
                     1
                 } else {
@@ -208,15 +196,20 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
                 }
             )
         } else {
-            newIndex = newIndex?.minus(
-                if (activities.getOrNull(index - 1)?.activityType != ActivityType.BREAK) {
-                    1
-                } else {
-                    2
-                }
-            )
+            if (activities.getOrNull(index)?.activityType == ActivityType.BREAK) {
+                handleSwipingBackFromBreakEdgeCase()
+            } else {
+                newIndex = newIndex.minus(
+                    if (activities.getOrNull(index - 1)?.activityType != ActivityType.BREAK) {
+                        1
+                    } else {
+                        2
+                    }
+                )
+            }
+
         }
-        if (newIndex == null || activities.getOrNull(newIndex) == null) {
+        if (activities.getOrNull(newIndex) == null) {
             return null
         }
         return newIndex
@@ -238,6 +231,18 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
         }
     }
 
+    private fun activityEndsIn3sec(currentSeconds: Float): Boolean {
+        val currentActivity = trainingWithActivities.activities[index]
+        return (currentActivity.activityType == ActivityType.STRETCH && currentSeconds == `3_SECONDS` ||
+                currentActivity.activityType == ActivityType.EXERCISE && currentSeconds == `3_SECONDS`)
+    }
+
+    private fun activityEnds(currentSeconds: Float): Boolean {
+        val currentActivity = trainingWithActivities.activities[index]
+        return (currentActivity.activityType == ActivityType.BREAK && currentSeconds == soundBeforeBreakEndsMs)
+    }
+
+
     private fun presetCurrentExercise(currentActivity: Activity) {
         if (skippedByUser) {
             presetActivityAfterSkipping()
@@ -256,19 +261,41 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
     private fun setTrainingFinishedState(allExercisesCount: Int) {
         val currentTime = Calendar.getInstance()
         val seconds = (currentTime.timeInMillis - startingTimestamp) / 1000
+        viewModelScope.launch {
+            soundEventNotifier.notifyEvent(TrainingEvent.TrainingEnded)
+        }
         _uiState.value = _uiState.value.copy(
             isLoading = false,
             error = null,
             displayableActivityItemListWithBreakMerged = null,
-            readExerciseNameEvent = null,
             trainingCompleted = TrainingCompleted(
                 currentTrainingTime = convertSecondsToMinutes(
                     seconds
                 ),
                 numberOfExercises = allExercisesCount
             ),
-            trainingCompletedEvent = TrainingCompletedEvent()
         )
+    }
+
+    private fun notifySoundHandlerActivityUpdated() {
+        trainingWithActivities.activities.getOrNull(index)?.let {
+            viewModelScope.launch {
+                soundEventNotifier.notifyEvent(
+                    TrainingEvent.NewActivityStarts(
+                        it,
+                        nextExerciseName = trainingWithActivities.activities.getOrNull(
+                            if (trainingWithActivities.activities.getOrNull(
+                                    index + 1
+                                )?.activityType != ActivityType.BREAK
+                            ) index + 1 else {
+                                index + 2
+                            }
+                        )?.name,
+                        isSwipedByUser = skippedByUser
+                    )
+                )
+            }
+        }
     }
 
     private fun presetActivityAfterSkipping() {
@@ -306,42 +333,6 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
         startingTimestampSaved = true
     }
 
-    private fun postActivityFinishesEvent(
-        activityId: Long,
-        currentSeconds: Float
-    ): ActivityFinishesEvent? {
-        return if (activityFinishedEventPosted != activityId && currentSeconds <= 3000) {
-            activityFinishedEventPosted = activityId
-            ActivityFinishesEvent()
-        } else {
-            _uiState.value.activityFinishesEvent
-        }
-    }
-
-    private fun postBreakFinishesEvent(
-        activityId: Long,
-        currentSeconds: Float
-    ): BreakEndsEvent? {
-        return if (lastActivityBreakSoundPosted != activityId && currentSeconds <= 100) {
-            lastActivityBreakSoundPosted = activityId
-            BreakEndsEvent()
-        } else {
-            _uiState.value.breakEndsEvent
-        }
-    }
-
-    private fun postReadExerciseNameEvent(
-        activityId: Long,
-        name: String
-    ): ReadExerciseNameEvent? {
-        return if (currentExerciseLoaded != activityId) {
-            currentExerciseLoaded = activityId
-            ReadExerciseNameEvent(name)
-        } else {
-            _uiState.value.readExerciseNameEvent
-        }
-    }
-
     private fun handleSwipeWhenTimerIsPausedEdgeCase(currentActivity: Activity) {
         //Timer has to be started if initially it's paused, so it can move to the next exercise.
         if (isPaused && currentActivity.activityType != ActivityType.TIMELESS_EXERCISE) {
@@ -358,6 +349,20 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
             )
     }
 
+    private suspend fun initializeSoundManager() {
+        soundEventNotifier = SoundEventNotifierImpl()
+        viewModelScope.launch {
+            collectSoundsFlow()
+        }
+        soundEventNotifier.notifyEvent(
+            TrainingEvent.NewActivityStarts(
+                newActivity = trainingWithActivities.activities[0],
+                isFirstExercise = true,
+                isSwipedByUser = false
+            )
+        )
+    }
+
     private fun initUiState(): MutableStateFlow<ExecuteTrainingUiState> = MutableStateFlow(
         ExecuteTrainingUiState(
             true,
@@ -368,9 +373,6 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
             0F,
             null,
             0,
-            null,
-            null,
-            null,
             null
         )
     )
@@ -433,16 +435,19 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
                 currentSeconds,
                 this.duration
             )
+
             ActivityType.EXERCISE -> DisplayableActivityItem.Exercise(
                 this.name,
                 nextExerciseName,
                 currentSeconds,
                 this.duration
             )
+
             ActivityType.TIMELESS_EXERCISE -> DisplayableActivityItem.TimelessExercise(
                 name = this.name,
                 nextExerciseName
             )
+
             ActivityType.BREAK -> DisplayableActivityItem.Break(
                 nextExerciseName ?: "",
                 currentSeconds,

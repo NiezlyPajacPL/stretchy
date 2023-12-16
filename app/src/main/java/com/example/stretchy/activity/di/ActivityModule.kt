@@ -2,7 +2,7 @@ package com.example.stretchy.activity.di
 
 import androidx.activity.ComponentActivity
 import com.example.stretchy.activity.di.scope.ActivityScope
-import com.example.stretchy.features.executetraining.sound.Speaker
+import com.example.stretchy.features.executetraining.sound.SoundPlayer
 import dagger.Module
 import dagger.Provides
 
@@ -14,5 +14,5 @@ class ActivityModule {
     @ActivityScope
     @Provides
     fun provideSpeaker(activity: ComponentActivity) =
-        Speaker(context = activity.baseContext)
+        SoundPlayer(context = activity.baseContext)
 }

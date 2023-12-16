@@ -107,7 +107,6 @@ fun Navigation(
             ExecuteTrainingComposable(
                 vm,
                 activityComponent.speaker(),
-                component.player(),
                 navController
             )
         }
